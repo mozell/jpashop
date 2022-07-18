@@ -33,11 +33,6 @@ public class MemberApiController {
     }
 
     @Data
-    static class CreateMemberRequest {
-        private String name;
-    }
-
-    @Data
     static class CreateMemberResponse {
         private Long id;
 
