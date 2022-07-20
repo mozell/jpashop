@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
@@ -33,6 +34,32 @@ public class MemberApiController {
     @GetMapping("/api/v1/members")
     public List<Member> memberV1() {
         return memberService.findMembers();
+    }
+
+    /**
+     * 조회 V2: 응답 값으로 엔티티가 아닌 별도의 DTO를 반환한다.
+     */
+    @GetMapping("/api/v2/members")
+    public Result memberV2() {
+        List<Member> findMembers = memberService.findMembers();
+        List<MemberDto> collect = findMembers.stream()
+                .map(m -> new MemberDto(m.getName()))
+                .collect(Collectors.toList());
+
+        return new Result(/*collect.size(),*/ collect);
+    }
+
+    @Data
+    @AllArgsConstructor
+    static class Result<T> {
+        /* private int count; */ // count 추가
+        private T data;
+    }
+
+    @Data
+    @AllArgsConstructor
+    static class MemberDto {
+        private String name;
     }
 
     /**
