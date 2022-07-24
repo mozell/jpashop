@@ -35,15 +35,18 @@ public class OrderApiController {
         return all;
     }
 
-
+    /**
+     * V2. 엔티티를 조회해서 DTO로 변환(fetch join 사용X)
+     * - 트랜잭션 안에서 지연 로딩 필요
+     */
     @GetMapping("/api/v2/orders")
     public List<OrderDto> orderV2() {
         List<Order> orders = orderRepository.findAllByString(new OrderSearch());
-        List<OrderDto> collect = orders.stream()
+        List<OrderDto> result = orders.stream()
                 .map(o -> new OrderDto(o))
                 .collect(Collectors.toList());
 
-        return collect;
+        return result;
     }
 
     @Getter
