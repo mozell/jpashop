@@ -14,6 +14,7 @@ public class OrderQueryRepository {
 
     private final EntityManager em;
 
+    ///////////////////     V4. JPA에서 DTO로 바로 조회, 컬렉션 N 조회 (1 + N Query)     ///////////////////
     /**
      * 컬렉션은 별도로 조회
      * Query: 루트 1번, 컬렉션 N 번
@@ -32,6 +33,34 @@ public class OrderQueryRepository {
         return result;
     }
 
+    /**
+     * 1:N 관계(컬렉션)를 제외한 나머지를 한번에 조회
+     */
+    private List<OrderQueryDto> findOrders() {
+        return em.createQuery(
+                        "select new jpabook.jpashop.repository.order.query.OrderQueryDto(o.id, m.name, o.orderDate, o.status, d.address)" +
+                                " from Order o" +
+                                " join o.member m" +
+                                " join o.delivery d", OrderQueryDto.class)
+                .getResultList();
+    }
+
+    /**
+     * 1:N 관계인 orderItems 조회
+     */
+    private List<OrderItemQueryDto> findOrderItems(Long orderId) {
+        return em.createQuery(
+                    "select new jpabook.jpashop.repository.order.query.OrderItemQueryDto(oi.order.id, i.name, oi.orderPrice, oi.count)" +
+                            " from OrderItem oi" +
+                            " join oi.item i" +
+                            " where oi.order.id = :orderId", OrderItemQueryDto.class)
+            .setParameter("orderId", orderId)
+            .getResultList();
+    }
+
+
+
+    ///////////////////     V5. JPA에서 DTO로 바로 조회, 컬렉션 1 조회 최적화 버전 (1 + 1 Query)     ///////////////////
     /**
      * 최적화
      * Query: 루트 1번, 컬렉션 1번
@@ -75,28 +104,17 @@ public class OrderQueryRepository {
         return orderIds;
     }
 
-    /**
-     * 1:N 관계(컬렉션)를 제외한 나머지를 한번에 조회
-     */
-    private List<OrderQueryDto> findOrders() {
-        return em.createQuery(
-                        "select new jpabook.jpashop.repository.order.query.OrderQueryDto(o.id, m.name, o.orderDate, o.status, d.address)" +
-                                " from Order o" +
-                                " join o.member m" +
-                                " join o.delivery d", OrderQueryDto.class)
-                .getResultList();
-    }
 
-    /**
-     * 1:N 관계인 orderItems 조회
-     */
-    private List<OrderItemQueryDto> findOrderItems(Long orderId) {
+
+    ///////////////////     V6. JPA에서 DTO로 바로 조회, 플랫 데이터(1Query) (1 Query)     ///////////////////
+    public List<OrderFlatDto> findAllByDto_flat() {
         return em.createQuery(
-                    "select new jpabook.jpashop.repository.order.query.OrderItemQueryDto(oi.order.id, i.name, oi.orderPrice, oi.count)" +
-                            " from OrderItem oi" +
-                            " join oi.item i" +
-                            " where oi.order.id = :orderId", OrderItemQueryDto.class)
-            .setParameter("orderId", orderId)
-            .getResultList();
+                "select new jpabook.jpashop.repository.order.query.OrderFlatDto(o.id, m.name, o.orderDate, o.status, d.address, i.name, oi.orderPrice, oi.count)" +
+                        " from Order o" +
+                        " join o.member m" +
+                        " join o.delivery d" +
+                        " join o.orderItems oi" +
+                        " join oi.item i", OrderFlatDto.class)
+                .getResultList();
     }
 }
